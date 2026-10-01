@@ -75,8 +75,9 @@
     .transport-content{position:relative;width:min(78vw,700px);display:flex;flex-direction:column;gap:12px;color:var(--green);letter-spacing:.13em}
     .transport-content span{font-size:13px}
     .transport-content strong{font-size:clamp(3.5rem,11vw,9rem);font-weight:500;line-height:1;color:var(--ink);letter-spacing:-.07em}
+    .transport-ascii{height:9.3em;margin:4px 0 0;color:var(--green);font:clamp(9px,1.6vw,13px)/1.32 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:0;white-space:pre;overflow:hidden}
     .transport-line{display:block;height:2px;margin-top:20px;background:var(--green);transform:scaleX(0);transform-origin:left}
-    .transport-overlay.is-visible .transport-line{animation:transport-load .65s ease-out forwards}
+    .transport-overlay.is-visible .transport-line{animation:transport-load 1.25s ease-out forwards}
     .page.chapter-enter{animation:chapter-arrive .5s ease-out}
     @keyframes transport-load{to{transform:scaleX(1)}}
     @keyframes transport-scan{to{transform:translateY(5px)}}
@@ -142,7 +143,7 @@
       </section>
     </main>
     <div class="gate-feedback" id="gate-feedback" aria-hidden="true"><span id="gate-label">SCROLL AGAIN TO CONTINUE</span><span class="gate-meter"><span id="gate-meter-fill"></span></span></div>
-    <div class="transport-overlay" id="transport-overlay" aria-hidden="true"><div class="transport-content"><span id="transport-index">CHAPTER 02 / 04</span><strong id="transport-title">WORK</strong><span>ACCESSING NEXT MODULE</span><span class="transport-line"></span></div></div>
+    <div class="transport-overlay" id="transport-overlay" aria-hidden="true"><div class="transport-content"><span id="transport-index">CHAPTER 02 / 04</span><strong id="transport-title">WORK</strong><pre class="transport-ascii" id="transport-ascii" aria-hidden="true"></pre><span>ACCESSING NEXT MODULE</span><span class="transport-line"></span></div></div>
     <div class="command-feedback" id="command-feedback" role="status" aria-live="polite"></div>
     <form class="command-bar" id="command-form" autocomplete="off"><label class="prompt" for="command-input">visitor@francis:~$</label><input id="command-input" type="text" placeholder="type a chapter or keep scrolling" aria-label="Portfolio command" spellcheck="false"><button type="submit" aria-label="Run command">↵</button></form>
     <nav class="nav-bar" aria-label="Main navigation"><div class="nav-list"><a class="active" href="#home">&gt; 01 ._HOME</a><a href="#work">02 ._WORK</a><a href="#about">03 ._ABOUT</a><a href="#resume">04 ._RESUME</a></div><span class="nav-hint" id="chapter-progress">CHAPTER 01 / 04 · SCROLL TO EXPLORE</span></nav>
@@ -163,6 +164,7 @@
       const overlay = document.getElementById('transport-overlay');
       const overlayIndex = document.getElementById('transport-index');
       const overlayTitle = document.getElementById('transport-title');
+      const overlayAscii = document.getElementById('transport-ascii');
       const form = document.getElementById('command-form');
       const input = document.getElementById('command-input');
       const feedback = document.getElementById('command-feedback');
@@ -174,6 +176,7 @@
       let activeIndex = 0;
       let locked = false;
       let inputBlockedUntil = 0;
+      let asciiTimer = 0;
       let gateAmount = 0;
       let gateTarget = '';
       let touchY = 0;
@@ -182,6 +185,56 @@
       const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
       const commands = ['help','home','work','about','resume','ls','pwd','clear','tracereader','floodcast','moneytalks','petir-regen','email'];
       const aliases = {trace:'tracereader',reader:'tracereader',flood:'floodcast',money:'moneytalks',petir:'petir-regen',regen:'petir-regen',cv:'resume'};
+      const asciiScreens = {
+        home: [
+          '+--------------------------------+',
+          '| GIGACHEN_OS :: SESSION START   |',
+          '| > whoami                       |',
+          '| francis.gunadi                 |',
+          '| status ............... online  |',
+          '+--------------------------------+'
+        ].join('\n'),
+        work: [
+          '+--------------------------------+',
+          '| /WORK                          |',
+          '| +-- /forensics/                |',
+          '| +-- /reverse/                  |',
+          '| +-- /web/                      |',
+          '| `-- /machine-learning/         |',
+          '+--------------------------------+'
+        ].join('\n'),
+        about: [
+          '+--------------------------------+',
+          '| [ ID: FG-001 ]                 |',
+          '| NAME : FRANCIS GUNADI         |',
+          '| BASE : JAKARTA, ID            |',
+          '| TEAM : PETIR CYBER SECURITY   |',
+          '| MODE : INVESTIGATE            |',
+          '+--------------------------------+'
+        ].join('\n'),
+        resume: [
+          '+--------------------------------+',
+          '| RESUME.TXT                     |',
+          '| [x] EDUCATION                 |',
+          '| [x] ORGANIZATION              |',
+          '| [x] RECOGNITION               |',
+          '| [x] PROJECTS                  |',
+          '+--------------------------------+'
+        ].join('\n')
+      };
+
+      function animateAscii(id) {
+        window.clearInterval(asciiTimer);
+        const art = asciiScreens[id];
+        const started = performance.now();
+        overlayAscii.textContent = '';
+        asciiTimer = window.setInterval(() => {
+          const portion = Math.min(1, (performance.now() - started) / 1050);
+          const count = Math.ceil(art.length * portion);
+          overlayAscii.textContent = art.slice(0, count) + (portion < 1 ? '_' : '');
+          if (portion === 1) window.clearInterval(asciiTimer);
+        }, 35);
+      }
 
       function chapterTop(chapter) {
         return main.scrollTop + chapter.getBoundingClientRect().top - main.getBoundingClientRect().top;
@@ -236,7 +289,10 @@
         const number = chapters.indexOf(target) + 1;
         overlayIndex.textContent = 'CHAPTER ' + String(number).padStart(2,'0') + ' / 04';
         overlayTitle.textContent = id.toUpperCase();
-        if (!reducedMotion.matches) overlay.classList.add('is-visible');
+        if (!reducedMotion.matches) {
+          animateAscii(id);
+          overlay.classList.add('is-visible');
+        }
         window.setTimeout(() => {
           activeIndex = number - 1;
           main.scrollTop = chapterTop(target);
@@ -247,11 +303,12 @@
             window.setTimeout(() => target.classList.remove('chapter-enter'), 550);
           }
           window.setTimeout(() => {
+            window.clearInterval(asciiTimer);
             overlay.classList.remove('is-visible');
             locked = false;
             inputBlockedUntil = performance.now() + 200;
-          }, reducedMotion.matches ? 0 : 370);
-        }, reducedMotion.matches ? 0 : 370);
+          }, reducedMotion.matches ? 0 : 620);
+        }, reducedMotion.matches ? 0 : 680);
       }
       function chargeGate(targetId, delta, source) {
         if (gateTarget !== targetId) {
