@@ -173,8 +173,7 @@
       let active = 'home';
       let activeIndex = 0;
       let locked = false;
-      let requirePause = false;
-      let lastIntentAt = 0;
+      let inputBlockedUntil = 0;
       let gateAmount = 0;
       let gateTarget = '';
       let touchY = 0;
@@ -234,7 +233,6 @@
           return;
         }
         locked = true;
-        requirePause = true;
         const number = chapters.indexOf(target) + 1;
         overlayIndex.textContent = 'CHAPTER ' + String(number).padStart(2,'0') + ' / 04';
         overlayTitle.textContent = id.toUpperCase();
@@ -251,6 +249,7 @@
           window.setTimeout(() => {
             overlay.classList.remove('is-visible');
             locked = false;
+            inputBlockedUntil = performance.now() + 200;
           }, reducedMotion.matches ? 0 : 370);
         }, reducedMotion.matches ? 0 : 370);
       }
@@ -272,15 +271,8 @@
         if (gateAmount >= gateThreshold) transportTo(targetId);
       }
       function handleScrollIntent(delta, event, source) {
-        const now = performance.now();
-        const resumedAfterPause = now - lastIntentAt > 260;
-        lastIntentAt = now;
         event.preventDefault();
-        if (locked) return true;
-        if (requirePause) {
-          if (!resumedAfterPause) return true;
-          requirePause = false;
-        }
+        if (locked || performance.now() < inputBlockedUntil) return true;
         if (!delta) return false;
         const index = currentIndex();
         const direction = Math.sign(delta);
@@ -348,14 +340,14 @@
           transportTo(link.hash.slice(1));
         });
       }
-      main.addEventListener('wheel', event => {
+      window.addEventListener('wheel', event => {
         handleScrollIntent(event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? main.clientHeight : 1), event, 'wheel');
       }, {passive:false});
-      main.addEventListener('touchstart', event => {
+      window.addEventListener('touchstart', event => {
         touchY = event.touches[0].clientY;
         touchContribution = 0;
       }, {passive:true});
-      main.addEventListener('touchmove', event => {
+      window.addEventListener('touchmove', event => {
         const nextY = event.touches[0].clientY;
         const delta = touchY - nextY;
         touchY = nextY;
