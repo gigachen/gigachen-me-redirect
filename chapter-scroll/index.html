@@ -171,7 +171,10 @@
       let draft = '';
       let scrollFrame = 0;
       let active = 'home';
+      let activeIndex = 0;
       let locked = false;
+      let requirePause = false;
+      let lastIntentAt = 0;
       let gateAmount = 0;
       let gateTarget = '';
       let touchY = 0;
@@ -185,12 +188,17 @@
         return main.scrollTop + chapter.getBoundingClientRect().top - main.getBoundingClientRect().top;
       }
       function currentIndex() {
-        let index = 0;
-        const activeLine = main.getBoundingClientRect().top + 80;
-        for (let i = 0; i < chapters.length; i++) {
-          if (chapters[i].getBoundingClientRect().top <= activeLine) index = i;
-        }
-        return index;
+        return activeIndex;
+      }
+      function chapterBounds(index) {
+        const start = chapterTop(chapters[index]);
+        const end = start + chapters[index].offsetHeight - main.clientHeight - 48;
+        return {start, end: Math.max(start, end)};
+      }
+      function clampToChapter() {
+        const bounds = chapterBounds(activeIndex);
+        const position = Math.max(bounds.start, Math.min(bounds.end, main.scrollTop));
+        if (Math.abs(position - main.scrollTop) > 1) main.scrollTop = position;
       }
       function updateActive() {
         const position = currentIndex() + 1;
@@ -226,11 +234,13 @@
           return;
         }
         locked = true;
+        requirePause = true;
         const number = chapters.indexOf(target) + 1;
         overlayIndex.textContent = 'CHAPTER ' + String(number).padStart(2,'0') + ' / 04';
         overlayTitle.textContent = id.toUpperCase();
         if (!reducedMotion.matches) overlay.classList.add('is-visible');
         window.setTimeout(() => {
+          activeIndex = number - 1;
           main.scrollTop = chapterTop(target);
           if (updateHash) window.history.replaceState(null, '', '#' + id);
           updateActive();
@@ -262,29 +272,31 @@
         if (gateAmount >= gateThreshold) transportTo(targetId);
       }
       function handleScrollIntent(delta, event, source) {
-        if (locked) { event.preventDefault(); return true; }
+        const now = performance.now();
+        const resumedAfterPause = now - lastIntentAt > 260;
+        lastIntentAt = now;
+        event.preventDefault();
+        if (locked) return true;
+        if (requirePause) {
+          if (!resumedAfterPause) return true;
+          requirePause = false;
+        }
         if (!delta) return false;
         const index = currentIndex();
         const direction = Math.sign(delta);
         const targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= chapters.length) {
-          resetGate();
-          return false;
-        }
-        const stop = direction > 0
-          ? chapterTop(chapters[index]) + chapters[index].offsetHeight - main.clientHeight
-          : chapterTop(chapters[index]);
+        const bounds = chapterBounds(index);
+        const stop = direction > 0 ? bounds.end : bounds.start;
         const distance = direction > 0 ? stop - main.scrollTop : main.scrollTop - stop;
         if (distance > 3) {
           resetGate();
-          if (Math.abs(delta) > distance) {
-            event.preventDefault();
-            main.scrollTop = stop;
-            return true;
-          }
-          return false;
+          main.scrollTop = Math.max(bounds.start, Math.min(bounds.end, main.scrollTop + delta));
+          return true;
         }
-        event.preventDefault();
+        if (targetIndex < 0 || targetIndex >= chapters.length) {
+          resetGate();
+          return true;
+        }
         chargeGate(chapters[targetIndex].id, delta, source);
         return true;
       }
@@ -355,18 +367,18 @@
           : ['PageUp','ArrowUp'].includes(event.key) ? -1 : 0;
         if (!direction) return;
         const delta = direction * (event.key.startsWith('Arrow') ? 72 : main.clientHeight * .78);
-        if (!handleScrollIntent(delta, event, 'key')) {
-          event.preventDefault();
-          main.scrollTop += delta;
-        }
+        handleScrollIntent(delta, event, 'key');
       });
-      main.addEventListener('scroll', requestUpdate, {passive:true});
+      main.addEventListener('scroll', () => { clampToChapter(); requestUpdate(); }, {passive:true});
       window.addEventListener('hashchange', () => {
         const id = decodeURIComponent(location.hash.slice(1)).toLowerCase();
         if (chapterIds.has(id)) transportTo(id, false);
       });
       const initial = decodeURIComponent(location.hash.slice(1)).toLowerCase();
-      if (chapterIds.has(initial)) document.getElementById(initial).scrollIntoView({behavior:'instant',block:'start'});
+      if (chapterIds.has(initial)) {
+        activeIndex = chapters.findIndex(chapter => chapter.id === initial);
+        document.getElementById(initial).scrollIntoView({behavior:'instant',block:'start'});
+      }
       updateActive();
     })();
   </script>
