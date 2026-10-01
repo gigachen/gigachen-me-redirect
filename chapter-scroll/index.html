@@ -61,6 +61,15 @@
     .page{display:flex;flex-direction:column;min-height:100%;padding:20px 0 0;animation:none}
     .page[hidden]{display:flex}
     .resume-cta{align-self:flex-start}
+    .home-intro{margin-bottom:32px;border:1px solid #354338;background:linear-gradient(135deg,#1a241b,#151b16 70%);box-shadow:inset 3px 0 var(--green)}
+    .home-intro-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 21px;border-bottom:1px solid #354338}
+    .home-intro-bar .command-heading{margin:0;font-size:13px}.home-intro-bar>span{color:var(--green);font-size:11px;letter-spacing:.08em}
+    .home-intro .hero{margin:0;padding:23px 27px 27px}
+    .home-featured{padding-top:2px;border-top:2px solid #455b49}
+    .home-featured-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:16px;padding:13px 0 14px;border-bottom:1px solid var(--line)}
+    .home-featured-head .command-heading{margin:0;color:var(--muted);font-size:13px}
+    .home-featured-head h2{margin:4px 0 0;color:var(--ink);font-size:clamp(1.2rem,2.2vw,1.55rem);font-weight:500;line-height:1.3}
+    .home-featured-head a{padding-bottom:3px;color:var(--green);font-size:12px;white-space:nowrap}.home-featured-head a:hover{text-decoration:underline}
     .chapter-gate{margin-top:auto;min-height:clamp(130px,19vh,230px);display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:30px 0 24px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;letter-spacing:.05em}
     .chapter-gate a{color:var(--green);text-align:right}
     .chapter-gate a:hover{text-decoration:underline}
@@ -84,6 +93,7 @@
     @keyframes chapter-arrive{from{opacity:.45;transform:translateY(16px)}to{opacity:1;transform:none}}
     @media(max-width:590px){.preview-banner{font-size:10px}.chapter-gate{align-items:flex-start;flex-direction:column;justify-content:flex-end}.chapter-gate a{text-align:left}}
     @media(max-width:590px){.gate-feedback{left:16px;right:16px;bottom:92px;gap:12px;font-size:10px}.gate-meter{width:25%}}
+    @media(max-width:590px){.home-intro{margin-bottom:25px}.home-intro-bar{padding:9px 13px}.home-intro .hero{padding:19px 17px 21px}.home-featured-head{align-items:flex-start;flex-direction:column}.home-featured-head a{white-space:normal}}
     @media(prefers-reduced-motion:reduce){.transport-overlay:before,.transport-overlay.is-visible .transport-line,.page.chapter-enter{animation:none}}
   </style>
 </head>
@@ -98,15 +108,19 @@
     </header>
     <main class="main-output" id="main-output">
       <section class="page" id="home" aria-labelledby="home-title">
-        <p class="command-heading"><span class="dollar">$</span> whoami</p>
+        <div class="home-intro">
+          <div class="home-intro-bar"><p class="command-heading"><span class="dollar">$</span> whoami</p><span>01 / PROFILE</span></div>
         <div class="hero"><h1 id="home-title">I investigate systems<br>and build <em>useful tools.</em></h1><p>I'm Francis, a BINUS Computer Science student working across cybersecurity and machine learning. I train models, investigate data, and help build the applications around them.</p><div class="hero-links"><a href="#work">Explore work</a><a href="../francis-gunadi-cv.pdf" download>Download CV</a><a href="mailto:francis.gunadi@gmail.com">Get in touch</a></div></div>
-        <div class="section-head"><p class="command-heading"><span class="dollar">$</span> ls ./featured</p><a href="#work">view all projects /work/</a></div>
-        <div class="feature-grid">
+        </div>
+        <section class="home-featured" aria-labelledby="featured-title">
+          <div class="home-featured-head"><div><p class="command-heading"><span class="dollar">$</span> ls ./featured</p><h2 id="featured-title">Featured projects</h2></div><a href="#work">view all projects /work/</a></div>
+          <div class="feature-grid">
           <a class="feature-card" href="../#tracereader" target="_blank" rel="noopener noreferrer" aria-label="Read TraceReader project"><div class="feature-art"><div class="art-top"><span>TRACE_READER / LOG ANALYSIS</span><span>01/04</span></div><div class="log-window"><div class="log-row"><span>08:42:16</span><b>blk_8741 · received block</b><span class="flag">NORMAL</span></div><div class="log-row alert"><span>08:42:17</span><b>blk_8741 · retry sequence</b><span class="flag">ANOMALY</span></div><div class="log-row"><span>08:42:18</span><b>blk_8741 · verification</b><span class="flag">REVIEW</span></div></div></div><div class="feature-copy"><span class="feature-name">TRACEREADER.log</span><span class="feature-desc">Finding anomalies in more than 11 million HDFS log lines.</span></div></a>
           <a class="feature-card" href="../#floodcast" target="_blank" rel="noopener noreferrer" aria-label="Read FloodCast project"><div class="feature-art"><div class="art-top"><span>FLOODCAST / DKI JAKARTA</span><span>02/04</span></div><div class="chart-wrap"><div class="chart-label">CLIMATE SIGNAL <strong>· ILLUSTRATIVE</strong></div><svg viewBox="0 0 440 112" preserveAspectRatio="none" aria-hidden="true"><path d="M0 92 C35 88 45 44 75 66 S120 83 150 54 190 76 220 67 275 16 305 36 340 72 370 41 415 24 440 12" fill="none" stroke="#4ade80" stroke-width="2.5"/><path d="M0 92 C35 88 45 44 75 66 S120 83 150 54 190 76 220 67 275 16 305 36 340 72 370 41 415 24 440 12 L440 112 H0Z" fill="#4ade80" opacity=".08"/></svg><div class="chart-foot"><span>RAINFALL</span><span>SEASONALITY</span><span>CLIMATE LAGS</span></div></div></div><div class="feature-copy"><span class="feature-name">FLOODCAST.model</span><span class="feature-desc">Monthly flood prediction from rainfall and climate indicators.</span></div></a>
           <a class="feature-card" href="../#moneytalks" target="_blank" rel="noopener noreferrer" aria-label="Read MoneyTalks project"><div class="feature-art"><div class="art-top"><span>MONEYTALKS / LIVE CAMERA</span><span>03/04</span></div><div class="camera-box"><div class="camera-note"><span>Rp 100.000</span></div><span class="camera-result">DETECTED → SPEECH</span></div></div><div class="feature-copy"><span class="feature-name">MONEYTALKS.vision</span><span class="feature-desc">Recognizing rupiah notes and speaking their value in Indonesian.</span></div></a>
           <a class="feature-card" href="../#petir-regen" target="_blank" rel="noopener noreferrer" aria-label="Read PETIR REGEN project"><div class="feature-art"><div class="art-top"><span>PETIR REGEN / CTF CHALLENGES</span><span>04/04</span></div><div class="files-art"><div><b>./qualifiers/</b><span class="file-right">2026</span></div><div class="indent">├─ forensics/ <b>wave-to-the-camera</b></div><div class="indent">└─ ai/ <b>howls-cat</b></div><br><div>2 CHALLENGES · DESIGNED END TO END</div></div></div><div class="feature-copy"><span class="feature-name">PETIR_REGEN.ctf</span><span class="feature-desc">Digital forensics and AI challenges built for the qualifying round.</span></div></a>
-        </div>
+          </div>
+        </section>
         <div class="chapter-gate" aria-label="End of HOME chapter"><span>01 / 04 · END OF HOME</span><a href="#work">SCROLL MORE TO ENTER WORK ↓</a></div>
       </section>
       <section class="page" id="work" aria-labelledby="work-title">
