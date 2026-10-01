@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#0f1210">
   <meta name="description" content="Francis Gunadi is a computer science student working across cybersecurity, machine learning, and useful software.">
   <title>Francis Gunadi // Portfolio</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230f1210'/%3E%3Cpath d='m11 19 15 13-15 13M31 45h21' fill='none' stroke='%234ade80' stroke-width='5' stroke-linecap='square'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" href="gigachen_web_logo.png">
+  <link rel="apple-touch-icon" href="gigachen_web_logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -21,6 +22,7 @@
     .skip{position:absolute;top:-4rem;left:1rem;padding:.55rem .8rem;background:var(--green);color:var(--bg);z-index:20}.skip:focus{top:1rem}
     .shell{width:min(100%,var(--max));height:100dvh;margin:auto;padding:20px 24px 0;display:flex;flex-direction:column}
     .sys-header{display:flex;justify-content:space-between;gap:2rem;padding-bottom:16px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.8;color:var(--muted)}
+    .sys-identity{display:flex;align-items:center;gap:12px;min-width:0}.sys-logo{width:56px;height:56px;flex:none;overflow:hidden;background:#000}.sys-logo img{display:block;width:100%;height:100%;object-fit:cover;transform:scale(1.6)}
     .sys-header dl{display:grid;grid-template-columns:auto 1fr;gap:0 .8rem;margin:0}.sys-header dt,.sys-header dd{margin:0}.sys-header dd{color:var(--ink)}.sys-header .sys-right{text-align:right}.sys-header .sys-right dl{grid-template-columns:1fr auto}.sys-header a{color:var(--green)}.sys-header a:hover{text-decoration:underline}
     .status-ok{color:var(--green)!important}.sys-value{white-space:nowrap}
     .main-output{flex:1;min-height:0;overflow:auto;padding:20px 8px 28px 0;scrollbar-color:var(--line) transparent;scrollbar-width:thin}
@@ -54,7 +56,7 @@
   <a class="skip" href="#home">Skip to content</a>
   <div class="shell" id="app">
     <header class="sys-header" aria-label="Portfolio system header">
-      <dl><dt>SYS.NAME</dt><dd>gigachen_os</dd><dt>STATUS</dt><dd class="status-ok">● ONLINE</dd><dt>SYS.NODE</dt><dd>francis.gunadi</dd></dl>
+      <div class="sys-identity"><div class="sys-logo"><img src="gigachen_web_logo.png" alt="Gigachen mascot" width="56" height="56"></div><dl><dt>SYS.NAME</dt><dd>gigachen_os</dd><dt>STATUS</dt><dd class="status-ok">● ONLINE</dd><dt>SYS.NODE</dt><dd>francis.gunadi</dd></dl></div>
       <div class="sys-right"><dl><dt>LOCATION</dt><dd>JAKARTA, ID</dd><dt>FOCUS</dt><dd>CYBERSECURITY · ML</dd><dt>CONTACT</dt><dd><a href="mailto:francis.gunadi@gmail.com">francis.gunadi@gmail.com</a></dd></dl></div>
     </header>
     <main class="main-output" id="main-output">
