@@ -52,19 +52,38 @@
     @media(max-width:590px){.feature-grid{grid-template-columns:1fr}.feature-art{height:195px}.nav-list{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}.nav-list a{font-size:12px;white-space:normal;overflow-wrap:anywhere}.command-bar .prompt{font-size:11px}.hero{margin-bottom:30px}.file-head{display:none}.file-group{padding-left:0}.file-row{grid-template-columns:1fr;gap:4px;padding:13px 0}.file-row .file-name{font-size:14px}.case-meta div{min-width:130px;flex:1}.recognition-list li,.skill-list li{grid-template-columns:1fr;gap:2px}.page-lead{font-size:1rem}}
     @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
-    /* The preview keeps the familiar shell while making each main chapter scrollable. */
+    /* The preview keeps the familiar shell while gating chapter transitions. */
     .preview-banner{display:flex;justify-content:space-between;gap:12px;padding:0 0 8px;color:var(--green);font-size:11px;letter-spacing:.08em}
     .preview-banner a{color:var(--muted);letter-spacing:0}
     .preview-banner a:hover{color:var(--green)}
-    .main-output{scroll-snap-type:y mandatory;scroll-behavior:smooth;overscroll-behavior-y:contain;padding-bottom:0}
-    .page{display:flex;flex-direction:column;min-height:100%;padding:20px 0 0;animation:none;scroll-snap-align:start;scroll-snap-stop:always}
+    .shell{position:relative}
+    .main-output{scroll-behavior:auto;overscroll-behavior-y:contain;padding-bottom:0}
+    .page{display:flex;flex-direction:column;min-height:100%;padding:20px 0 0;animation:none}
     .page[hidden]{display:flex}
     .resume-cta{align-self:flex-start}
     .chapter-gate{margin-top:auto;min-height:clamp(130px,19vh,230px);display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:30px 0 24px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;letter-spacing:.05em}
     .chapter-gate a{color:var(--green);text-align:right}
     .chapter-gate a:hover{text-decoration:underline}
     .page+ .page{border-top:1px solid var(--line)}
+    .gate-feedback{position:absolute;left:24px;right:24px;bottom:92px;z-index:12;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:13px 16px;border:1px solid var(--green);background:#101a13f2;color:var(--green);font-size:12px;letter-spacing:.07em;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .18s ease,transform .18s ease,visibility .18s}
+    .gate-feedback.is-visible{opacity:1;visibility:visible;transform:none}
+    .gate-meter{flex:none;display:block;width:min(32%,240px);height:4px;background:#355440}
+    .gate-meter span{display:block;width:0;height:100%;background:var(--green);transition:width .12s linear}
+    .transport-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:#07100a;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .28s ease,visibility .28s}
+    .transport-overlay.is-visible{opacity:1;visibility:visible}
+    .transport-overlay:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(to bottom,transparent 0 4px,#4ade800d 4px 5px);animation:transport-scan .7s linear infinite}
+    .transport-content{position:relative;width:min(78vw,700px);display:flex;flex-direction:column;gap:12px;color:var(--green);letter-spacing:.13em}
+    .transport-content span{font-size:13px}
+    .transport-content strong{font-size:clamp(3.5rem,11vw,9rem);font-weight:500;line-height:1;color:var(--ink);letter-spacing:-.07em}
+    .transport-line{display:block;height:2px;margin-top:20px;background:var(--green);transform:scaleX(0);transform-origin:left}
+    .transport-overlay.is-visible .transport-line{animation:transport-load .65s ease-out forwards}
+    .page.chapter-enter{animation:chapter-arrive .5s ease-out}
+    @keyframes transport-load{to{transform:scaleX(1)}}
+    @keyframes transport-scan{to{transform:translateY(5px)}}
+    @keyframes chapter-arrive{from{opacity:.45;transform:translateY(16px)}to{opacity:1;transform:none}}
     @media(max-width:590px){.preview-banner{font-size:10px}.chapter-gate{align-items:flex-start;flex-direction:column;justify-content:flex-end}.chapter-gate a{text-align:left}}
+    @media(max-width:590px){.gate-feedback{left:16px;right:16px;bottom:92px;gap:12px;font-size:10px}.gate-meter{width:25%}}
+    @media(prefers-reduced-motion:reduce){.transport-overlay:before,.transport-overlay.is-visible .transport-line,.page.chapter-enter{animation:none}}
   </style>
 </head>
 <body>
@@ -87,7 +106,7 @@
           <a class="feature-card" href="../#moneytalks" target="_blank" rel="noopener noreferrer" aria-label="Read MoneyTalks project"><div class="feature-art"><div class="art-top"><span>MONEYTALKS / LIVE CAMERA</span><span>03/04</span></div><div class="camera-box"><div class="camera-note"><span>Rp 100.000</span></div><span class="camera-result">DETECTED → SPEECH</span></div></div><div class="feature-copy"><span class="feature-name">MONEYTALKS.vision</span><span class="feature-desc">Recognizing rupiah notes and speaking their value in Indonesian.</span><span class="feature-meta">COMPUTER VISION · ACCESSIBILITY</span></div></a>
           <a class="feature-card" href="../#petir-regen" target="_blank" rel="noopener noreferrer" aria-label="Read PETIR REGEN project"><div class="feature-art"><div class="art-top"><span>PETIR REGEN / CTF CHALLENGES</span><span>04/04</span></div><div class="files-art"><div><b>./qualifiers/</b><span class="file-right">2026</span></div><div class="indent">├─ forensics/ <b>wave-to-the-camera</b></div><div class="indent">└─ ai/ <b>howls-cat</b></div><br><div>2 CHALLENGES · DESIGNED END TO END</div></div></div><div class="feature-copy"><span class="feature-name">PETIR_REGEN.ctf</span><span class="feature-desc">Digital forensics and AI challenges built for the qualifying round.</span><span class="feature-meta">SECURITY · CHALLENGE DESIGN</span></div></a>
         </div>
-        <div class="chapter-gate" aria-label="End of HOME chapter"><span>01 / 04 · END OF HOME</span><a href="#work">KEEP SCROLLING TO WORK ↓</a></div>
+        <div class="chapter-gate" aria-label="End of HOME chapter"><span>01 / 04 · END OF HOME</span><a href="#work">SCROLL MORE TO ENTER WORK ↓</a></div>
       </section>
       <section class="page" id="work" aria-labelledby="work-title">
         <p class="command-heading"><span class="dollar">$</span> ls -la /work/</p>
@@ -101,14 +120,14 @@
         <div class="file-row"><a class="file-name" href="../#floodcast" target="_blank" rel="noopener noreferrer">FLOODCAST.model</a><span class="file-desc">Monthly flood prediction for DKI Jakarta from climate data.</span><span class="file-role">Random Forest · Flask frontend/backend</span><span class="file-result">AUC 0.724 · F1 0.687</span></div>
         <div class="file-row"><a class="file-name" href="../#moneytalks" target="_blank" rel="noopener noreferrer">MONEYTALKS.vision</a><span class="file-desc">Live rupiah recognition with spoken results in Indonesian.</span><span class="file-role">Model training · Flask frontend/backend</span><span class="file-result">7 denominations</span></div>
         <div class="contact-strip"><span>More on</span><a href="https://github.com/gigachen" target="_blank" rel="noopener noreferrer">github.com/gigachen</a></div>
-        <div class="chapter-gate" aria-label="End of WORK chapter"><span>02 / 04 · END OF WORK</span><a href="#about">KEEP SCROLLING TO ABOUT ↓</a></div>
+        <div class="chapter-gate" aria-label="End of WORK chapter"><span>02 / 04 · END OF WORK</span><a href="#about">SCROLL MORE TO ENTER ABOUT ↓</a></div>
       </section>
       <section class="page" id="about" aria-labelledby="about-title">
         <p class="command-heading"><span class="dollar">$</span> cat about.md</p><h1 class="page-title" id="about-title">About me<span class="accent">.</span></h1>
         <p class="page-lead">I'm Francis, a BINUS Computer Science student focused on digital forensics and reverse engineering. I also build machine learning tools for practical problems.</p>
         <div class="about-grid"><div><div class="copy-block"><h2>// BACKGROUND</h2><p>With PETIR Cyber Security, I compete in national CTFs, focusing on digital forensics and reverse engineering while also working on web exploitation.</p><p>I designed and built two qualifier challenges for <a class="inline-link" href="../#petir-regen" target="_blank" rel="noopener noreferrer">PETIR REGEN 2026</a>, including a digital forensics challenge. I also train models and build application interfaces for projects such as <a class="inline-link" href="../#tracereader" target="_blank" rel="noopener noreferrer">TraceReader</a>.</p></div>
         <div class="contact-strip"><span>CONTACT</span><a href="mailto:francis.gunadi@gmail.com">francis.gunadi@gmail.com</a><a href="https://www.linkedin.com/in/francisgunadi" target="_blank" rel="noopener noreferrer">LinkedIn</a><a href="https://github.com/gigachen" target="_blank" rel="noopener noreferrer">GitHub</a></div></div><aside><div class="info-card"><small>EDUCATION</small><strong>Bina Nusantara University</strong><span>Computer Science · 2024–2028 expected<br>GPA 3.96 / 4.00</span></div><div class="info-card"><small>TEAM</small><strong>PETIR Cyber Security</strong><span>Member since June 2025</span></div><div class="info-card"><small>LOCATION</small><strong>Jakarta, Indonesia</strong><span>Working across security and ML</span></div></aside></div>
-        <div class="chapter-gate" aria-label="End of ABOUT chapter"><span>03 / 04 · END OF ABOUT</span><a href="#resume">KEEP SCROLLING TO RESUME ↓</a></div>
+        <div class="chapter-gate" aria-label="End of ABOUT chapter"><span>03 / 04 · END OF ABOUT</span><a href="#resume">SCROLL MORE TO ENTER RESUME ↓</a></div>
       </section>
       <section class="page" id="resume" aria-labelledby="resume-title">
         <p class="command-heading"><span class="dollar">$</span> cat resume.txt</p><h1 class="page-title" id="resume-title">Resume<span class="accent">.</span></h1>
@@ -122,6 +141,8 @@
         <div class="chapter-gate" aria-label="End of RESUME chapter"><span>04 / 04 · END OF RESUME</span><a href="#home">BACK TO HOME ↑</a></div>
       </section>
     </main>
+    <div class="gate-feedback" id="gate-feedback" aria-hidden="true"><span id="gate-label">SCROLL AGAIN TO CONTINUE</span><span class="gate-meter"><span id="gate-meter-fill"></span></span></div>
+    <div class="transport-overlay" id="transport-overlay" aria-hidden="true"><div class="transport-content"><span id="transport-index">CHAPTER 02 / 04</span><strong id="transport-title">WORK</strong><span>ACCESSING NEXT MODULE</span><span class="transport-line"></span></div></div>
     <div class="command-feedback" id="command-feedback" role="status" aria-live="polite"></div>
     <form class="command-bar" id="command-form" autocomplete="off"><label class="prompt" for="command-input">visitor@francis:~$</label><input id="command-input" type="text" placeholder="type a chapter or keep scrolling" aria-label="Portfolio command" spellcheck="false"><button type="submit" aria-label="Run command">↵</button></form>
     <nav class="nav-bar" aria-label="Main navigation"><div class="nav-list"><a class="active" href="#home">&gt; 01 ._HOME</a><a href="#work">02 ._WORK</a><a href="#about">03 ._ABOUT</a><a href="#resume">04 ._RESUME</a></div><span class="nav-hint" id="chapter-progress">CHAPTER 01 / 04 · SCROLL TO EXPLORE</span></nav>
@@ -136,6 +157,12 @@
       const navLinks = [...document.querySelectorAll('.nav-list a')];
       const main = document.getElementById('main-output');
       const progress = document.getElementById('chapter-progress');
+      const gateFeedback = document.getElementById('gate-feedback');
+      const gateLabel = document.getElementById('gate-label');
+      const gateFill = document.getElementById('gate-meter-fill');
+      const overlay = document.getElementById('transport-overlay');
+      const overlayIndex = document.getElementById('transport-index');
+      const overlayTitle = document.getElementById('transport-title');
       const form = document.getElementById('command-form');
       const input = document.getElementById('command-input');
       const feedback = document.getElementById('command-feedback');
@@ -144,15 +171,30 @@
       let draft = '';
       let scrollFrame = 0;
       let active = 'home';
+      let locked = false;
+      let gateAmount = 0;
+      let gateTarget = '';
+      let touchY = 0;
+      let touchContribution = 0;
+      const gateThreshold = 320;
+      const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
       const commands = ['help','home','work','about','resume','ls','pwd','clear','tracereader','floodcast','moneytalks','petir-regen','email'];
       const aliases = {trace:'tracereader',reader:'tracereader',flood:'floodcast',money:'moneytalks',petir:'petir-regen',regen:'petir-regen',cv:'resume'};
 
-      function updateActive() {
-        const threshold = main.getBoundingClientRect().top + main.clientHeight * .36;
-        for (const chapter of chapters) {
-          if (chapter.getBoundingClientRect().top <= threshold) active = chapter.id;
+      function chapterTop(chapter) {
+        return main.scrollTop + chapter.getBoundingClientRect().top - main.getBoundingClientRect().top;
+      }
+      function currentIndex() {
+        let index = 0;
+        const activeLine = main.getBoundingClientRect().top + 80;
+        for (let i = 0; i < chapters.length; i++) {
+          if (chapters[i].getBoundingClientRect().top <= activeLine) index = i;
         }
-        const position = chapters.findIndex(chapter => chapter.id === active) + 1;
+        return index;
+      }
+      function updateActive() {
+        const position = currentIndex() + 1;
+        active = chapters[position - 1].id;
         progress.textContent = 'CHAPTER ' + String(position).padStart(2,'0') + ' / 04 · SCROLL TO EXPLORE';
         for (const link of navLinks) {
           const selected = link.hash === '#' + active;
@@ -168,12 +210,89 @@
         if (scrollFrame) return;
         scrollFrame = requestAnimationFrame(() => { scrollFrame = 0; updateActive(); });
       }
+      function resetGate() {
+        gateAmount = 0;
+        gateTarget = '';
+        gateFill.style.width = '0%';
+        gateFeedback.classList.remove('is-visible');
+      }
+      function transportTo(id, updateHash = true) {
+        const target = document.getElementById(id);
+        if (!target || locked) return;
+        resetGate();
+        if (Math.abs(main.scrollTop - chapterTop(target)) < 3) {
+          if (updateHash) window.history.replaceState(null, '', '#' + id);
+          updateActive();
+          return;
+        }
+        locked = true;
+        const number = chapters.indexOf(target) + 1;
+        overlayIndex.textContent = 'CHAPTER ' + String(number).padStart(2,'0') + ' / 04';
+        overlayTitle.textContent = id.toUpperCase();
+        if (!reducedMotion.matches) overlay.classList.add('is-visible');
+        window.setTimeout(() => {
+          main.scrollTop = chapterTop(target);
+          if (updateHash) window.history.replaceState(null, '', '#' + id);
+          updateActive();
+          if (!reducedMotion.matches) {
+            target.classList.add('chapter-enter');
+            window.setTimeout(() => target.classList.remove('chapter-enter'), 550);
+          }
+          window.setTimeout(() => {
+            overlay.classList.remove('is-visible');
+            locked = false;
+          }, reducedMotion.matches ? 0 : 370);
+        }, reducedMotion.matches ? 0 : 370);
+      }
+      function chargeGate(targetId, delta, source) {
+        if (gateTarget !== targetId) {
+          resetGate();
+          gateTarget = targetId;
+        }
+        let amount = Math.min(120, Math.abs(delta));
+        if (source === 'touch') {
+          amount = Math.min(amount, Math.max(0, 120 - touchContribution));
+          touchContribution += amount;
+        }
+        gateAmount = Math.min(gateThreshold, gateAmount + amount);
+        const percent = Math.round(gateAmount / gateThreshold * 100);
+        gateLabel.textContent = 'SCROLL MORE TO ENTER ' + targetId.toUpperCase() + ' · ' + percent + '%';
+        gateFill.style.width = percent + '%';
+        gateFeedback.classList.add('is-visible');
+        if (gateAmount >= gateThreshold) transportTo(targetId);
+      }
+      function handleScrollIntent(delta, event, source) {
+        if (locked) { event.preventDefault(); return true; }
+        if (!delta) return false;
+        const index = currentIndex();
+        const direction = Math.sign(delta);
+        const targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= chapters.length) {
+          resetGate();
+          return false;
+        }
+        const stop = direction > 0
+          ? chapterTop(chapters[index]) + chapters[index].offsetHeight - main.clientHeight
+          : chapterTop(chapters[index]);
+        const distance = direction > 0 ? stop - main.scrollTop : main.scrollTop - stop;
+        if (distance > 3) {
+          resetGate();
+          if (Math.abs(delta) > distance) {
+            event.preventDefault();
+            main.scrollTop = stop;
+            return true;
+          }
+          return false;
+        }
+        event.preventDefault();
+        chargeGate(chapters[targetIndex].id, delta, source);
+        return true;
+      }
       function reply(message) { feedback.textContent = message; }
       function go(id) {
         feedback.textContent = '';
         if (chapterIds.has(id)) {
-          document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
-          window.history.replaceState(null,'','#' + id);
+          transportTo(id);
         } else if (projectIds.has(id)) {
           location.href = '../#' + id;
         }
@@ -211,10 +330,40 @@
         input.value = historyAt === commandHistory.length ? draft : commandHistory[historyAt];
         input.setSelectionRange(input.value.length,input.value.length);
       });
+      for (const link of [...navLinks, ...document.querySelectorAll('.chapter-gate a')]) {
+        link.addEventListener('click', event => {
+          event.preventDefault();
+          transportTo(link.hash.slice(1));
+        });
+      }
+      main.addEventListener('wheel', event => {
+        handleScrollIntent(event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? main.clientHeight : 1), event, 'wheel');
+      }, {passive:false});
+      main.addEventListener('touchstart', event => {
+        touchY = event.touches[0].clientY;
+        touchContribution = 0;
+      }, {passive:true});
+      main.addEventListener('touchmove', event => {
+        const nextY = event.touches[0].clientY;
+        const delta = touchY - nextY;
+        touchY = nextY;
+        handleScrollIntent(delta, event, 'touch');
+      }, {passive:false});
+      window.addEventListener('keydown', event => {
+        if (event.target instanceof Element && event.target.closest('input,textarea,button,[contenteditable]')) return;
+        const direction = ['PageDown','ArrowDown',' '].includes(event.key) ? 1
+          : ['PageUp','ArrowUp'].includes(event.key) ? -1 : 0;
+        if (!direction) return;
+        const delta = direction * (event.key.startsWith('Arrow') ? 72 : main.clientHeight * .78);
+        if (!handleScrollIntent(delta, event, 'key')) {
+          event.preventDefault();
+          main.scrollTop += delta;
+        }
+      });
       main.addEventListener('scroll', requestUpdate, {passive:true});
       window.addEventListener('hashchange', () => {
         const id = decodeURIComponent(location.hash.slice(1)).toLowerCase();
-        if (chapterIds.has(id)) document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+        if (chapterIds.has(id)) transportTo(id, false);
       });
       const initial = decodeURIComponent(location.hash.slice(1)).toLowerCase();
       if (chapterIds.has(initial)) document.getElementById(initial).scrollIntoView({behavior:'instant',block:'start'});
