@@ -6,8 +6,161 @@
   const sections = [...document.querySelectorAll("main > section[id]")];
   const navLinks = [...document.querySelectorAll(".site-nav a")];
   const isProject = document.body.dataset.page === "project";
+  let openingActive = false;
   let navigateChapter = null;
   let hideChapterCue = null;
+
+  function playOpening() {
+    const intro = document.getElementById("opening-intro");
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    if (!intro || motion.matches) return;
+    const replay = new URLSearchParams(location.search).get("preview") === "logo-intro";
+    try { if (!replay && sessionStorage.getItem("gigachen-intro-seen")) return; } catch { /* The intro still works when storage is unavailable. */ }
+    const content = [...document.querySelectorAll(".site-header, main, .site-footer")];
+    const previousFocus = document.activeElement;
+    const skip = intro.querySelector(".intro-skip");
+    const continueButton = intro.querySelector(".intro-continue");
+    const slot = intro.querySelector(".intro-logo-slot");
+    const logo = intro.querySelector(".intro-logo");
+    const logoImage = logo.querySelector("img");
+    const wordmark = intro.querySelector(".intro-wordmark");
+    const header = document.querySelector(".site-header");
+    const headerOpacity = header.style.opacity;
+    const headerLogo = header.querySelector(".brand-logo");
+    const spacer = document.createElement("div");
+    spacer.className = "intro-scroll-space";
+    spacer.setAttribute("aria-hidden", "true");
+    let scrollDistance = Math.max(600, innerHeight * 1.1);
+    spacer.style.height = (scrollDistance + header.offsetHeight) + "px";
+    header.before(spacer);
+    const candidates = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?/\\|_-";
+    // Each position settles independently, so the word emerges across the whole grid.
+    const textTargets = [...intro.querySelectorAll(".intro-ascii, .intro-caption")].map(element => ({
+      element,
+      finalText: element.textContent,
+      characters: [...element.textContent],
+      settlesAt: [...element.textContent].map(character => character === "\n" ? 0 : 520 + Math.random() * 950)
+    }));
+    const restoreText = () => textTargets.forEach(target => { target.element.textContent = target.finalText; });
+    const scramble = elapsed => {
+      textTargets.forEach(target => {
+        target.element.textContent = target.characters.map((character, index) => {
+          if (character === "\n" || elapsed >= target.settlesAt[index]) return character;
+          return Math.random() < .12 ? " " : candidates[Math.floor(Math.random() * candidates.length)];
+        }).join("");
+      });
+    };
+    let scrambleFrame = 0;
+    let lastFrame = 0;
+    const started = performance.now();
+    scramble(0);
+    function updateScramble(now) {
+      const elapsed = now - started;
+      if (elapsed >= 1500) { restoreText(); return; }
+      if (now - lastFrame >= 65) { scramble(elapsed); lastFrame = now; }
+      scrambleFrame = requestAnimationFrame(updateScramble);
+    }
+    scrambleFrame = requestAnimationFrame(updateScramble);
+    openingActive = true;
+    intro.hidden = false;
+    document.documentElement.classList.add("is-opening");
+    content.forEach(element => { element.inert = true; });
+    let scrollFrame = 0;
+    let travelling = false;
+    let finished = false;
+    const ease = value => value * value * (3 - 2 * value);
+    const clamp = value => Math.min(1, Math.max(0, value));
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cancelAnimationFrame(scrollFrame);
+      cancelAnimationFrame(scrambleFrame);
+      restoreText();
+      intro.hidden = true;
+      openingActive = false;
+      document.documentElement.classList.remove("is-opening");
+      header.style.opacity = headerOpacity;
+      spacer.remove();
+      window.scrollTo({ top: 0, behavior: "instant" });
+      content.forEach(element => { element.inert = false; });
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("keydown", onKey, true);
+      motion.removeEventListener("change", onMotion);
+      try { sessionStorage.setItem("gigachen-intro-seen", "1"); } catch { /* Storage is optional. */ }
+      if (previousFocus instanceof HTMLElement && previousFocus !== document.body) previousFocus.focus({ preventScroll: true });
+      else {
+        const heading = document.querySelector(".chapter:not([hidden]) h1, .chapter:not([hidden]) h2");
+        if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+      }
+    };
+    function renderScroll() {
+      scrollFrame = 0;
+      if (finished) return;
+      const progress = clamp(window.scrollY / scrollDistance);
+      const portion = ease(progress);
+      const origin = slot.getBoundingClientRect();
+      const destination = headerLogo.getBoundingClientRect();
+      const headerTop = header.getBoundingClientRect().top;
+      if (progress > 0) travelling = true;
+      if (travelling) {
+        logo.classList.add("is-travelling");
+        const interpolate = (from, to) => from + (to - from) * portion;
+        logo.style.left = interpolate(origin.left, destination.left) + "px";
+        logo.style.top = interpolate(origin.top, destination.top - headerTop) + "px";
+        logo.style.width = interpolate(origin.width, destination.width) + "px";
+        logo.style.height = interpolate(origin.height, destination.height) + "px";
+        logoImage.style.transform = "scale(" + interpolate(1.6, 1.5) + ")";
+        logoImage.style.filter = "saturate(" + interpolate(.65, 1) + ")";
+      }
+      const textFade = ease(clamp(progress / .65));
+      wordmark.style.opacity = 1 - textFade;
+      wordmark.style.transform = "translateY(" + (-32 * textFade) + "px)";
+      intro.style.backgroundColor = "rgba(9, 13, 10, " + (1 - portion) + ")";
+      header.style.opacity = portion;
+      continueButton.style.opacity = 1 - ease(clamp(progress / .35));
+      skip.style.opacity = 1 - portion;
+      if (progress >= .999) finish();
+    }
+    function onScroll() {
+      if (!scrollFrame) scrollFrame = requestAnimationFrame(renderScroll);
+    }
+    function onResize() {
+      const progress = clamp(window.scrollY / scrollDistance);
+      scrollDistance = Math.max(600, innerHeight * 1.1);
+      spacer.style.height = (scrollDistance + header.offsetHeight) + "px";
+      window.scrollTo({ top: progress * scrollDistance, behavior: "instant" });
+      onScroll();
+    }
+    const enter = () => {
+      window.scrollTo({ top: scrollDistance, behavior: "smooth" });
+    };
+    const onKey = event => {
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); finish(); return; }
+      if (event.key === "Tab") {
+        event.preventDefault();
+        const controls = [continueButton, skip];
+        const index = controls.indexOf(document.activeElement);
+        controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus({ preventScroll: true });
+      }
+      if (["PageDown", "ArrowDown", " ", "PageUp", "ArrowUp", "Home", "End"].includes(event.key) && !event.target.closest("button")) {
+        event.preventDefault();
+        event.stopPropagation();
+        const step = ["PageDown", "PageUp", " "].includes(event.key) ? innerHeight * .65 : 90;
+        const next = event.key === "End" ? scrollDistance : event.key === "Home" ? 0 : window.scrollY + (["PageUp", "ArrowUp"].includes(event.key) || (event.key === " " && event.shiftKey) ? -step : step);
+        window.scrollTo({ top: Math.min(scrollDistance, Math.max(0, next)), behavior: "smooth" });
+      }
+    };
+    const onMotion = event => { if (event.matches) finish(); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
+    document.addEventListener("keydown", onKey, true);
+    motion.addEventListener("change", onMotion);
+    skip.addEventListener("click", enter, { once: true });
+    continueButton.addEventListener("click", enter, { once: true });
+    intro.focus({ preventScroll: true });
+    renderScroll();
+  }
 
   function markChapter(id) {
     const current = isProject ? "work" : id;
@@ -40,7 +193,7 @@
     let cueDirection = 0;
     function showCue(direction, portion = 0, gesture = "Scroll") {
       const target = adjacent(direction);
-      if (!target || locked) return;
+      if (!target || locked || openingActive) return;
       cueDirection = direction;
       cueLabel.textContent = gesture + " a little more to enter " + labels[target] + (direction > 0 ? " ↓" : " ↑");
       cueFill.style.transform = "scaleX(" + Math.min(1, Math.max(0, portion)) + ")";
@@ -138,7 +291,7 @@
     }
 
     navigateChapter = (id, updateHistory = true) => {
-      if (!ids.includes(id) || locked) return;
+      if (!ids.includes(id) || locked || openingActive) return;
       hideChapterCue();
       if (id === active) {
         window.scrollTo({ top: 0, behavior: "instant" });
@@ -239,6 +392,7 @@
     }, { passive: true });
     window.addEventListener("wheel", event => {
       if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX) || editing(event.target)) return;
+      if (openingActive) return;
       if (locked) { event.preventDefault(); return; }
       const direction = Math.sign(event.deltaY);
       if (!direction || !atBoundary(direction) || !adjacent(direction) || performance.now() < cooldown) { hideChapterCue(); return; }
@@ -252,23 +406,34 @@
     let touchStart = null;
     window.addEventListener("touchstart", event => {
       if (event.touches.length !== 1 || editing(event.target)) { touchStart = null; return; }
-      touchStart = { y: event.touches[0].clientY, top: atBoundary(-1), bottom: atBoundary(1) };
+      touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY, top: atBoundary(-1), bottom: atBoundary(1), opening: openingActive };
     }, { passive: true });
     window.addEventListener("touchmove", event => {
-      if (!touchStart || locked || performance.now() < cooldown || event.touches.length !== 1) return;
+      if (!touchStart || event.touches.length !== 1) return;
       const delta = touchStart.y - event.touches[0].clientY;
+      const horizontal = touchStart.x - event.touches[0].clientX;
+      if (Math.abs(delta) <= Math.abs(horizontal)) return;
       const direction = Math.sign(delta);
+      // Claim only vertical movement beyond the page edge before the browser can refresh.
+      const outward = direction < 0 ? atBoundary(-1) : atBoundary(1);
+      if ((outward || locked) && event.cancelable) event.preventDefault();
+      if (touchStart.opening || openingActive || locked || performance.now() < cooldown) return;
       if (direction && (direction > 0 ? touchStart.bottom : touchStart.top) && adjacent(direction)) showCue(direction, Math.abs(delta) / swipeThreshold, "Swipe");
-    }, { passive: true });
+    }, { passive: false });
     window.addEventListener("touchend", event => {
-      if (!touchStart || locked || performance.now() < cooldown || !event.changedTouches.length) return;
-      const delta = touchStart.y - event.changedTouches[0].clientY;
-      const direction = Math.sign(delta);
-      if (Math.abs(delta) >= swipeThreshold && (direction > 0 ? touchStart.bottom : touchStart.top) && adjacent(direction)) navigateChapter(adjacent(direction));
-      else if (cueDirection) showCue(cueDirection, 0, "Swipe");
+      const gesture = touchStart;
       touchStart = null;
+      if (!gesture || gesture.opening || openingActive || locked || performance.now() < cooldown || !event.changedTouches.length) return;
+      const delta = gesture.y - event.changedTouches[0].clientY;
+      const horizontal = gesture.x - event.changedTouches[0].clientX;
+      if (Math.abs(delta) <= Math.abs(horizontal)) return;
+      const direction = Math.sign(delta);
+      if (Math.abs(delta) >= swipeThreshold && (direction > 0 ? gesture.bottom : gesture.top) && adjacent(direction)) navigateChapter(adjacent(direction));
+      else if (cueDirection) showCue(cueDirection, 0, "Swipe");
     }, { passive: true });
+    window.addEventListener("touchcancel", () => { touchStart = null; hideChapterCue(); }, { passive: true });
     document.addEventListener("keydown", event => {
+      if (openingActive) return;
       if (event.key === "Escape" && locked) { finishTransition?.(); return; }
       if (event.isComposing || editing(event.target) || event.altKey || event.metaKey || event.ctrlKey || event.target.closest?.("a, button, summary")) return;
       const direction = ["PageDown", "ArrowDown"].includes(event.key) || (event.key === " " && !event.shiftKey) ? 1 : ["PageUp", "ArrowUp"].includes(event.key) || (event.key === " " && event.shiftKey) ? -1 : 0;
@@ -281,6 +446,8 @@
       if (event.matches) finishTransition?.();
     });
   }
+
+  playOpening();
 
   const dialog = document.getElementById("command-dialog");
   const opener = document.querySelector("[data-open-palette]");
@@ -313,7 +480,7 @@
   }
 
   function openPalette() {
-    if (dialog.open) return;
+    if (dialog.open || openingActive) return;
     hideChapterCue?.();
     returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : opener;
     dialog.showModal();

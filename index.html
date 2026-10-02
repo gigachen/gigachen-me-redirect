@@ -10,10 +10,25 @@
   <link rel="canonical" href="https://gigachen.me/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=b30a0b35eb6c">
+  <script src="app.js?v=c0140ff19837" defer></script>
 </head>
 <body data-page="home">
+  <div class="opening-intro" id="opening-intro" role="dialog" aria-modal="true" aria-label="Welcome to Gigachen" aria-describedby="intro-instruction" tabindex="-1" hidden>
+    <div class="intro-lockup">
+      <div class="intro-logo-slot"><div class="intro-logo" aria-hidden="true"><img src="/gigachen_web_logo.png" width="1280" height="1280" alt="" fetchpriority="high"></div></div>
+      <div class="intro-wordmark">
+        <pre class="intro-ascii" aria-hidden="true">  ____ ___ ____    _    ____ _   _ _____ _   _
+ / ___|_ _/ ___|  / \  / ___| | | | ____| \ | |
+| |  _ | | |  _  / _ \| |   | |_| |  _| |  \| |
+| |_| || | |_| |/ ___ \ |___|  _  | |___| |\  |
+ \____|___\____/_/   \_\____|_| |_|_____|_| \_|</pre>
+        <p class="intro-caption" aria-hidden="true">Francis Gunadi / portfolio</p>
+      </div>
+    </div>
+    <button class="intro-continue" id="intro-instruction" type="button">Scroll to enter <span aria-hidden="true">↓</span></button>
+    <button class="intro-skip" type="button">Enter portfolio <span aria-hidden="true">↗</span></button>
+  </div>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <div class="wrap header-inner">
