@@ -230,6 +230,13 @@ a:hover { color: var(--green); }
 .command-hint { margin: 14px 0 0; color: var(--muted); font-size: .82rem; }
 .command-result { min-height: 70px; padding: 0 21px 22px; color: var(--ink); font: .85rem/1.8 var(--mono); }
 .command-result a { display: block; width: fit-content; color: var(--green); }
+.motion-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin: 0 21px 21px; padding-top: 18px; border-top: 1px solid var(--rule); font: .78rem var(--mono); }
+.motion-controls { display: flex; border: 1px solid var(--rule); }
+.motion-controls button { min-width: 44px; min-height: 44px; padding: 6px 10px; border: 0; background: none; color: var(--muted); font: inherit; }
+.motion-controls button[aria-pressed="true"] { background: var(--green); color: var(--bg); }
+.motion-controls button:hover:not([aria-pressed="true"]) { color: var(--green); }
+.motion-status { flex-basis: 100%; margin: 0; color: var(--muted); font-size: .72rem; }
+.motion-replay { color: var(--green); }
 
 @media (max-width: 850px) {
   .hero { grid-template-columns: 1fr; gap: 32px; min-height: 0; }
@@ -281,9 +288,11 @@ a:hover { color: var(--green); }
   .footer-inner { display: block; }
   .footer-inner p { margin: 0 0 5px; }
 }
+.motion-reduced { scroll-behavior: auto; }
+.motion-reduced .transport-overlay, .motion-reduced .opening-intro { display: none; }
+.motion-reduced *, .motion-reduced *::before, .motion-reduced *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  .transport-overlay { display: none; }
-  .opening-intro { display: none; }
-  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  html:not(.motion-enabled) { scroll-behavior: auto; }
+  html:not(.motion-enabled) .transport-overlay, html:not(.motion-enabled) .opening-intro { display: none; }
+  html:not(.motion-enabled) *, html:not(.motion-enabled) *::before, html:not(.motion-enabled) *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }

@@ -3,6 +3,42 @@
 
   document.documentElement.classList.add("js");
 
+  const systemMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const motionModes = ["auto", "on", "off"];
+  const requestedMotion = new URLSearchParams(location.search).get("motion");
+  let storedMotion = "auto";
+  try { storedMotion = localStorage.getItem("gigachen-motion") || "auto"; } catch { /* Preferences remain usable without storage. */ }
+  let motionMode = motionModes.includes(requestedMotion) ? requestedMotion : motionModes.includes(storedMotion) ? storedMotion : "auto";
+  const motionListeners = new Set();
+  const motionPreference = {
+    get matches() { return motionMode === "off" || (motionMode === "auto" && systemMotion.matches); },
+    addEventListener(type, listener) { if (type === "change") motionListeners.add(listener); },
+    removeEventListener(type, listener) { if (type === "change") motionListeners.delete(listener); }
+  };
+  function updateMotion() {
+    document.documentElement.classList.toggle("motion-enabled", motionMode === "on");
+    document.documentElement.classList.toggle("motion-reduced", motionPreference.matches);
+    document.querySelectorAll("[data-motion-mode]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.motionMode === motionMode)));
+    const status = document.querySelector(".motion-status");
+    if (status) status.textContent = motionMode === "auto" ? "Following this browser: animations " + (systemMotion.matches ? "off." : "on.") : "Animations " + motionMode + ".";
+    motionListeners.forEach(listener => listener({ matches: motionPreference.matches }));
+  }
+  function setMotion(mode) {
+    motionMode = mode;
+    try { localStorage.setItem("gigachen-motion", mode); } catch { /* Storage is optional. */ }
+    const url = new URL(location.href);
+    url.searchParams.delete("motion");
+    history.replaceState(null, "", url);
+    updateMotion();
+  }
+  if (motionModes.includes(requestedMotion)) {
+    try { localStorage.setItem("gigachen-motion", motionMode); } catch { /* Storage is optional. */ }
+  }
+  if (typeof systemMotion.addEventListener === "function") systemMotion.addEventListener("change", updateMotion);
+  else if (typeof systemMotion.addListener === "function") systemMotion.addListener(updateMotion);
+  document.querySelectorAll("[data-motion-mode]").forEach(button => button.addEventListener("click", () => setMotion(button.dataset.motionMode)));
+  updateMotion();
+
   const sections = [...document.querySelectorAll("main > section[id]")];
   const navLinks = [...document.querySelectorAll(".site-nav a")];
   const isProject = document.body.dataset.page === "project";
@@ -12,7 +48,7 @@
 
   function playOpening() {
     const intro = document.getElementById("opening-intro");
-    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const motion = motionPreference;
     if (!intro || motion.matches) return;
     const replay = new URLSearchParams(location.search).get("preview") === "logo-intro";
     try { if (!replay && sessionStorage.getItem("gigachen-intro-seen")) return; } catch { /* The intro still works when storage is unavailable. */ }
@@ -173,7 +209,7 @@
   if (sections.length) {
     const ids = sections.map(section => section.id);
     const labels = { home: "Home", work: "Work", about: "About", resume: "Resume" };
-    const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+    const reducedMotion = motionPreference;
     const overlay = document.createElement("div");
     overlay.className = "transport-overlay";
     overlay.setAttribute("aria-hidden", "true");
