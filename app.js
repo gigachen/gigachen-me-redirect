@@ -56,19 +56,12 @@
     const previousFocus = document.activeElement;
     const skip = intro.querySelector(".intro-skip");
     const continueButton = intro.querySelector(".intro-continue");
-    const slot = intro.querySelector(".intro-logo-slot");
     const logo = intro.querySelector(".intro-logo");
     const logoImage = logo.querySelector("img");
     const wordmark = intro.querySelector(".intro-wordmark");
     const header = document.querySelector(".site-header");
     const headerOpacity = header.style.opacity;
     const headerLogo = header.querySelector(".brand-logo");
-    const spacer = document.createElement("div");
-    spacer.className = "intro-scroll-space";
-    spacer.setAttribute("aria-hidden", "true");
-    let scrollDistance = Math.max(600, innerHeight * 1.1);
-    spacer.style.height = (scrollDistance + header.offsetHeight) + "px";
-    header.before(spacer);
     const candidates = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?/\\|_-";
     // Each position settles independently, so the word emerges across the whole grid.
     const textTargets = [...intro.querySelectorAll(".intro-ascii, .intro-caption")].map(element => ({
@@ -101,28 +94,31 @@
     intro.hidden = false;
     document.documentElement.classList.add("is-opening");
     content.forEach(element => { element.inert = true; });
-    let scrollFrame = 0;
-    let travelling = false;
+    const animations = [];
+    let entering = false;
+    let touchOrigin = null;
     let finished = false;
-    const ease = value => value * value * (3 - 2 * value);
-    const clamp = value => Math.min(1, Math.max(0, value));
     const finish = () => {
       if (finished) return;
       finished = true;
-      cancelAnimationFrame(scrollFrame);
       cancelAnimationFrame(scrambleFrame);
       restoreText();
       intro.hidden = true;
       openingActive = false;
       document.documentElement.classList.remove("is-opening");
       header.style.opacity = headerOpacity;
-      spacer.remove();
-      window.scrollTo({ top: 0, behavior: "instant" });
+      animations.forEach(animation => animation.cancel());
       content.forEach(element => { element.inert = false; });
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onWheel, true);
+      window.removeEventListener("touchstart", onTouchStart, true);
+      window.removeEventListener("touchmove", onTouchMove, true);
+      window.removeEventListener("touchend", onTouchEnd, true);
+      window.removeEventListener("touchcancel", onTouchEnd, true);
       window.removeEventListener("resize", onResize);
       document.removeEventListener("keydown", onKey, true);
       motion.removeEventListener("change", onMotion);
+      skip.removeEventListener("click", enter);
+      continueButton.removeEventListener("click", enter);
       try { sessionStorage.setItem("gigachen-intro-seen", "1"); } catch { /* Storage is optional. */ }
       if (previousFocus instanceof HTMLElement && previousFocus !== document.body) previousFocus.focus({ preventScroll: true });
       else {
@@ -130,47 +126,60 @@
         if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
       }
     };
-    function renderScroll() {
-      scrollFrame = 0;
-      if (finished) return;
-      const progress = clamp(window.scrollY / scrollDistance);
-      const portion = ease(progress);
-      const origin = slot.getBoundingClientRect();
-      const destination = headerLogo.getBoundingClientRect();
-      const headerTop = header.getBoundingClientRect().top;
-      if (progress > 0) travelling = true;
-      if (travelling) {
-        logo.classList.add("is-travelling");
-        const interpolate = (from, to) => from + (to - from) * portion;
-        logo.style.left = interpolate(origin.left, destination.left) + "px";
-        logo.style.top = interpolate(origin.top, destination.top - headerTop) + "px";
-        logo.style.width = interpolate(origin.width, destination.width) + "px";
-        logo.style.height = interpolate(origin.height, destination.height) + "px";
-        logoImage.style.transform = "scale(" + interpolate(1.6, 1.5) + ")";
-        logoImage.style.filter = "saturate(" + interpolate(.65, 1) + ")";
-      }
-      const textFade = ease(clamp(progress / .65));
-      wordmark.style.opacity = 1 - textFade;
-      wordmark.style.transform = "translateY(" + (-32 * textFade) + "px)";
-      intro.style.backgroundColor = "rgba(9, 13, 10, " + (1 - portion) + ")";
-      header.style.opacity = portion;
-      continueButton.style.opacity = 1 - ease(clamp(progress / .35));
-      skip.style.opacity = 1 - portion;
-      if (progress >= .999) finish();
-    }
-    function onScroll() {
-      if (!scrollFrame) scrollFrame = requestAnimationFrame(renderScroll);
-    }
-    function onResize() {
-      const progress = clamp(window.scrollY / scrollDistance);
-      scrollDistance = Math.max(600, innerHeight * 1.1);
-      spacer.style.height = (scrollDistance + header.offsetHeight) + "px";
-      window.scrollTo({ top: progress * scrollDistance, behavior: "instant" });
-      onScroll();
-    }
-    const enter = () => {
-      window.scrollTo({ top: scrollDistance, behavior: "smooth" });
+    const animate = (element, frames, options) => {
+      const animation = element.animate(frames, { fill: "forwards", ...options });
+      animations.push(animation);
+      return animation;
     };
+    const enter = () => {
+      if (entering || finished) return;
+      entering = true;
+      cancelAnimationFrame(scrambleFrame);
+      restoreText();
+      const origin = logo.getBoundingClientRect();
+      const destination = headerLogo.getBoundingClientRect();
+      // Scroll starts one continuous flight; the page stays in place beneath it.
+      logo.classList.add("is-travelling");
+      Object.assign(logo.style, {
+        left: origin.left + "px", top: origin.top + "px",
+        width: origin.width + "px", height: origin.height + "px"
+      });
+      const timing = { duration: 850, easing: "cubic-bezier(.4, 0, .2, 1)" };
+      const flight = animate(logo, [
+        { left: origin.left + "px", top: origin.top + "px", width: origin.width + "px", height: origin.height + "px" },
+        { left: destination.left + "px", top: destination.top + "px", width: destination.width + "px", height: destination.height + "px" }
+      ], timing);
+      animate(logoImage, [
+        { transform: "scale(1.6)", filter: "saturate(.65)" },
+        { transform: "scale(1.5)", filter: "saturate(1)" }
+      ], timing);
+      animate(wordmark, [
+        { opacity: 1, transform: "translateY(0)" },
+        { opacity: 0, transform: "translateY(-24px)" }
+      ], { duration: 320, easing: "ease-out" });
+      [continueButton, skip].forEach(button => animate(button, [{ opacity: 1 }, { opacity: 0 }], { duration: 180 }));
+      animate(intro, [{ backgroundColor: "rgba(9, 13, 10, 1)" }, { backgroundColor: "rgba(9, 13, 10, 0)" }], { duration: 620, delay: 200, easing: "ease-in-out" });
+      animate(header, [{ opacity: 0 }, { opacity: 1 }], { duration: 450, delay: 200, easing: "ease-out" });
+      flight.finished.then(finish, () => { /* Escape or reduced motion cancels the flight. */ });
+    };
+    function onWheel(event) {
+      if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      event.preventDefault();
+      if (event.deltaY > 0) enter();
+    }
+    function onTouchStart(event) {
+      touchOrigin = event.touches.length === 1 ? { x: event.touches[0].clientX, y: event.touches[0].clientY } : null;
+    }
+    function onTouchMove(event) {
+      if (!touchOrigin || event.touches.length !== 1) return;
+      const deltaY = touchOrigin.y - event.touches[0].clientY;
+      const deltaX = touchOrigin.x - event.touches[0].clientX;
+      if (Math.abs(deltaY) <= Math.abs(deltaX)) return;
+      if (event.cancelable) event.preventDefault();
+      if (deltaY > 24) enter();
+    }
+    function onTouchEnd() { touchOrigin = null; }
+    function onResize() { if (entering) finish(); }
     const onKey = event => {
       if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); finish(); return; }
       if (event.key === "Tab") {
@@ -179,23 +188,25 @@
         const index = controls.indexOf(document.activeElement);
         controls[(index + (event.shiftKey ? -1 : 1) + controls.length) % controls.length].focus({ preventScroll: true });
       }
-      if (["PageDown", "ArrowDown", " ", "PageUp", "ArrowUp", "Home", "End"].includes(event.key) && !event.target.closest("button")) {
+      if (["PageDown", "ArrowDown", " ", "PageUp", "ArrowUp", "Home", "End"].includes(event.key) && !(event.key === " " && event.target.closest("button"))) {
         event.preventDefault();
         event.stopPropagation();
-        const step = ["PageDown", "PageUp", " "].includes(event.key) ? innerHeight * .65 : 90;
-        const next = event.key === "End" ? scrollDistance : event.key === "Home" ? 0 : window.scrollY + (["PageUp", "ArrowUp"].includes(event.key) || (event.key === " " && event.shiftKey) ? -step : step);
-        window.scrollTo({ top: Math.min(scrollDistance, Math.max(0, next)), behavior: "smooth" });
+        if (["PageDown", "ArrowDown", "End"].includes(event.key) || (event.key === " " && !event.shiftKey)) enter();
       }
     };
     const onMotion = event => { if (event.matches) finish(); };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: false, capture: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true, capture: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true, capture: true });
     window.addEventListener("resize", onResize);
     document.addEventListener("keydown", onKey, true);
     motion.addEventListener("change", onMotion);
     skip.addEventListener("click", enter, { once: true });
     continueButton.addEventListener("click", enter, { once: true });
     intro.focus({ preventScroll: true });
-    renderScroll();
+    header.style.opacity = "0";
   }
 
   function markChapter(id) {

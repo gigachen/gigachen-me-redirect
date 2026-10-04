@@ -14,7 +14,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 92px; }
+html { scroll-behavior: smooth; scroll-padding-top: 92px; scrollbar-gutter: stable; }
 body { margin: 0; min-width: 280px; background: var(--bg); color: var(--ink); font: 400 1rem/1.65 var(--sans); }
 button, input { font: inherit; }
 button { cursor: pointer; }
@@ -32,8 +32,7 @@ a:hover { color: var(--green); }
 .opening-intro { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 24px; background: var(--bg); pointer-events: none; }
 .opening-intro[hidden] { display: none; }
 .opening-intro:focus { outline: none; }
-.intro-scroll-space { width: 100%; pointer-events: none; }
-.is-opening .site-header { position: fixed; inset: 0 0 auto; }
+.is-opening, .is-opening body { overflow: hidden; }
 .is-opening .site-header .brand-logo { visibility: hidden; }
 .intro-lockup { display: flex; align-items: center; gap: clamp(14px, 4vw, 48px); max-width: 100%; }
 .intro-logo-slot { flex: none; width: clamp(80px, 14vw, 168px); height: clamp(104px, 18vw, 215px); }
