@@ -56,12 +56,7 @@
     const previousFocus = document.activeElement;
     const skip = intro.querySelector(".intro-skip");
     const continueButton = intro.querySelector(".intro-continue");
-    const logo = intro.querySelector(".intro-logo");
-    const logoImage = logo.querySelector("img");
-    const wordmark = intro.querySelector(".intro-wordmark");
-    const header = document.querySelector(".site-header");
-    const headerOpacity = header.style.opacity;
-    const headerLogo = header.querySelector(".brand-logo");
+    const lockup = intro.querySelector(".intro-lockup");
     const candidates = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+=?/\\|_-";
     // Each position settles independently, so the word emerges across the whole grid.
     const textTargets = [...intro.querySelectorAll(".intro-ascii, .intro-caption")].map(element => ({
@@ -106,7 +101,6 @@
       intro.hidden = true;
       openingActive = false;
       document.documentElement.classList.remove("is-opening");
-      header.style.opacity = headerOpacity;
       animations.forEach(animation => animation.cancel());
       content.forEach(element => { element.inert = false; });
       window.removeEventListener("wheel", onWheel, true);
@@ -136,31 +130,11 @@
       entering = true;
       cancelAnimationFrame(scrambleFrame);
       restoreText();
-      const origin = logo.getBoundingClientRect();
-      const destination = headerLogo.getBoundingClientRect();
-      // Scroll starts one continuous flight; the page stays in place beneath it.
-      logo.classList.add("is-travelling");
-      Object.assign(logo.style, {
-        left: origin.left + "px", top: origin.top + "px",
-        width: origin.width + "px", height: origin.height + "px"
-      });
-      const timing = { duration: 850, easing: "cubic-bezier(.4, 0, .2, 1)" };
-      const flight = animate(logo, [
-        { left: origin.left + "px", top: origin.top + "px", width: origin.width + "px", height: origin.height + "px" },
-        { left: destination.left + "px", top: destination.top + "px", width: destination.width + "px", height: destination.height + "px" }
-      ], timing);
-      animate(logoImage, [
-        { transform: "scale(1.6)", filter: "saturate(.65)" },
-        { transform: "scale(1.5)", filter: "saturate(1)" }
-      ], timing);
-      animate(wordmark, [
-        { opacity: 1, transform: "translateY(0)" },
-        { opacity: 0, transform: "translateY(-24px)" }
-      ], { duration: 320, easing: "ease-out" });
-      [continueButton, skip].forEach(button => animate(button, [{ opacity: 1 }, { opacity: 0 }], { duration: 180 }));
-      animate(intro, [{ backgroundColor: "rgba(9, 13, 10, 1)" }, { backgroundColor: "rgba(9, 13, 10, 0)" }], { duration: 620, delay: 200, easing: "ease-in-out" });
-      animate(header, [{ opacity: 0 }, { opacity: 1 }], { duration: 450, delay: 200, easing: "ease-out" });
-      flight.finished.then(finish, () => { /* Escape or reduced motion cancels the flight. */ });
+      // The logo and ASCII leave as one stationary lockup before the page appears.
+      animate(lockup, [{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: "ease-out" });
+      [continueButton, skip].forEach(button => animate(button, [{ opacity: 1 }, { opacity: 0 }], { duration: 160 }));
+      const reveal = animate(intro, [{ opacity: 1 }, { opacity: 0 }], { duration: 380, delay: 220, easing: "ease-in-out" });
+      reveal.finished.then(finish, () => { /* Escape or reduced motion cancels the reveal. */ });
     };
     function onWheel(event) {
       if (event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
@@ -206,7 +180,6 @@
     skip.addEventListener("click", enter, { once: true });
     continueButton.addEventListener("click", enter, { once: true });
     intro.focus({ preventScroll: true });
-    header.style.opacity = "0";
   }
 
   function markChapter(id) {
